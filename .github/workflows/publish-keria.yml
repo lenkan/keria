@@ -64,8 +64,8 @@ jobs:
             type=ref,event=tag
             type=sha
             type=raw,value={{date 'YYYYMMDD_HHMMSS'}}
-            type=raw,value=latest,enable=${{ inputs.latest }}
-            type=raw,value=${{ inputs.version }},enable=${{ inputs.version != '' }}
+            type=raw,value=latest,enable=${{ github.event_name == 'workflow_dispatch' && inputs.latest == true }}
+            type=raw,value=${{ inputs.version }},enable=${{ github.event_name == 'workflow_dispatch' && inputs.version != '' }}
 
       - name: Build and push Docker image
         uses: docker/build-push-action@v6
