@@ -89,7 +89,8 @@ jobs:
         uses: docker/metadata-action@v5
         with:
           images: |
-            ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}
+            name=ghcr.io/${{ lower(github.repository_owner) }}/${{ github.event.repository.name }}
+            name=${{ vars.DOCKER_REPOSITORY_NAME }},enabled=${{ vars.DOCKER_REPOSITORY_NAME != '' }}
           tags: |
             type=ref,event=branch
             type=ref,event=tag
