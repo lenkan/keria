@@ -13,62 +13,12 @@ on:
     branches:
       - "main"
       - "docker-publish-lenkan"
+    tags:
+      - "*"
   pull_request:
   workflow_dispatch:
 
 jobs:
-  test:
-    runs-on: ${{ matrix.os }}
-    strategy:
-      fail-fast: false
-      matrix:
-        os: [macos-13, ubuntu-22.04, ubuntu-24.04, ubuntu-latest]
-
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Set up Python 3.12.8
-        uses: actions/setup-python@v5
-        with:
-          python-version: 3.12.8
-
-      - name: Install uv
-        uses: astral-sh/setup-uv@v3
-        with:
-          version: "0.9.5"
-      - name: Install dependencies
-        run: make install-dev
-
-      - name: Lint changes
-        run: make lint
-
-      - name: Check formatting
-        run: make format-check
-
-      - name: Run core KERIA tests
-        run: make test
-
-  coverage:
-    runs-on: ubuntu-24.04
-    steps:
-      - uses: actions/checkout@v4
-      - name: Set up Python 3.12.8
-        uses: actions/setup-python@v5
-        with:
-          python-version: 3.12.8
-      - name: Install uv
-        uses: astral-sh/setup-uv@v3
-        with:
-          version: "0.9.5"
-      - name: Install dependencies
-        run: make install-dev
-      - name: Run core KERIA tests
-        run: make test-coverage
-      - name: Upload
-        uses: codecov/codecov-action@v4
-        with:
-          token: ${{ secrets.CODECOV_TOKEN }}
-
   build:
     runs-on: ubuntu-24.04
     # needs: test
@@ -76,21 +26,15 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Log in to docker registry
+      - name: Log in to container registry ${{ env.DOCKER_REGISTRY }}
         uses: docker/login-action@v3
-        if: ${{ env.DOCKER_REGISTRY != 'ghcr.io' }}
         with:
+          # Uses github tokens for GHCR, otherwise configured repository secrets
+          # This way, forks can be configured to push their own images without
+          # having to modify the workflow.
           registry: ${{ env.DOCKER_REGISTRY }}
-          username: ${{ secrets.DOCKER_USERNAME }}
-          password: ${{ secrets.DOCKER_PASSWORD }}
-
-      - name: Log in to ghcr
-        uses: docker/login-action@v3
-        if: ${{ env.DOCKER_REGISTRY == 'ghcr.io' }}
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
+          username: ${{ env.DOCKER_REGISTRY == 'ghcr.io' && github.actor || secrets.DOCKER_USERNAME }}
+          password: ${{ env.DOCKER_REGISTRY == 'ghcr.io' && secrets.GITHUB_TOKEN || secrets.DOCKER_PASSWORD }}
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
@@ -103,12 +47,11 @@ jobs:
         uses: docker/metadata-action@v5
         with:
           images: |
-            name=${{ env.DOCKER_REGISTRY}}/${{ env.DOCKER_IMAGE_NAME }}
+            name=${{ env.DOCKER_REGISTRY }}/${{ env.DOCKER_IMAGE_NAME }}
           tags: |
             type=ref,event=branch
             type=ref,event=tag
             type=sha
-            type=raw,value={{date 'YYYYMMDD_HHMMSS'}}
             type=raw,value={{date 'YYYYMMDD_HHMMSS'}}
 
       - name: Run docker container
