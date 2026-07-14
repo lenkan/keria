@@ -331,7 +331,7 @@ def test_operation_bad_metadata(helpers):
             agent.monitor.status(credop)
         assert (
             str(err.value)
-            == "invalid long running credential operation, metadata missing 'ced' field"
+            == "invalid long running credential operation, metadata missing 'ced' or 'credential_said' field"
         )
 
         # End role
