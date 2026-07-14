@@ -315,7 +315,7 @@ def test_issue_credential(helpers, seeder):
         seeder.seedSchema(agent1.hby.db)
 
         # create the server that will receive the credential issuance messages
-        serverDoer = helpers.server(agency)
+        serverDoer = helpers.server(agency, httpPort=3903)
 
         tock = 0.03125
         limit = 1.0
@@ -689,7 +689,7 @@ def test_revoke_credential(helpers, seeder):
         seeder.seedSchema(agent.hby.db)
 
         # create the server that will receive the credential issuance messages
-        serverDoer = helpers.server(agency)
+        serverDoer = helpers.server(agency, httpPort=3904)
 
         tock = 0.03125
         limit = 1.0
@@ -1030,7 +1030,7 @@ def test_duplicate_issuance_rejection(helpers, seeder):
         _setup_credential_issue_routes(app, idResEnd)
         seeder.seedSchema(agent.hby.db)
 
-        serverDoer = helpers.server(agency)
+        serverDoer = helpers.server(agency, httpPort=3905)
         tock = 0.03125
         limit = 1.0
         doist = doing.Doist(limit=limit, tock=tock, real=True)
@@ -1090,7 +1090,7 @@ def test_issuance_rejects_stale_and_persisted_tel_events(helpers, seeder):
         _setup_credential_issue_routes(app, idResEnd)
         seeder.seedSchema(agent.hby.db)
 
-        serverDoer = helpers.server(agency)
+        serverDoer = helpers.server(agency, httpPort=3906)
         doist = doing.Doist(limit=1.0, tock=0.03125, real=True)
         deeds = doist.enter(doers=[agent, serverDoer])
 
@@ -1138,7 +1138,7 @@ def test_credential_issuance_requires_interaction_anchor(helpers, seeder):
         _setup_credential_issue_routes(app, idResEnd)
         seeder.seedSchema(agent.hby.db)
 
-        serverDoer = helpers.server(agency)
+        serverDoer = helpers.server(agency, httpPort=3907)
         doist = doing.Doist(limit=1.0, tock=0.03125, real=True)
         deeds = doist.enter(doers=[agent, serverDoer])
 
@@ -1188,7 +1188,7 @@ def test_duplicate_issuance_rejection_registry_advanced(helpers, seeder):
         _setup_credential_issue_routes(app, idResEnd)
         seeder.seedSchema(agent.hby.db)
 
-        serverDoer = helpers.server(agency)
+        serverDoer = helpers.server(agency, httpPort=3908)
         tock = 0.03125
         limit = 1.0
         doist = doing.Doist(limit=limit, tock=tock, real=True)
@@ -1272,7 +1272,7 @@ def test_duplicate_revocation_rejection(helpers, seeder):
         _setup_credential_issue_routes(app, idResEnd)
         seeder.seedSchema(agent.hby.db)
 
-        serverDoer = helpers.server(agency)
+        serverDoer = helpers.server(agency, httpPort=3909)
         tock = 0.03125
         limit = 1.0
         doist = doing.Doist(limit=limit, tock=tock, real=True)
@@ -1496,8 +1496,10 @@ def test_second_member_retry_does_not_block_in_flight_credential(helpers, seeder
         _run_until(
             doist,
             deeds,
-            lambda: agent_one.credentialer.complete(credential_two.said)
-            and agent_two.credentialer.complete(credential_two.said),
+            lambda: (
+                agent_one.credentialer.complete(credential_two.said)
+                and agent_two.credentialer.complete(credential_two.said)
+            ),
         )
 
         for client, op in (
